@@ -361,15 +361,47 @@ runq_setbit(struct runq *rq, int pri)
 }
 
 // NEW CODE
-int get_sched_env_conf() {
+int get_sched_env_conf(void);
+int get_sched_env_conf(void) {
   char *config_env = kern_getenv("CMPS_111_SCHED");
   
   if (config_env == NULL)
     return 1;
 
-  return config_env - '0';
+  return config_env[0] - '0';
 }
 
+int get_sched_save_env_conf(void);
+int get_sched_save_env_conf(void) {
+  char *config_env = kern_getenv("CMPS_111_SCHED_SAVE");
+
+  if (config_env == NULL)
+    return 0;
+
+  return config_env[0] - '0';
+}
+
+void sched_save_to_file(struct runq *rq, struct thread *td, struct rqhead *rqh);
+void sched_save_to_file(struct runq *rq, struct thread *td, struct rqhead *rqh) {
+  int i, pri;
+  struct thread *td_tmp;
+
+  pri = td->priority / RQ_PPQ;
+  printf("current: td=%p pri%d normalized_pri=%d rqh=%p\n", td, td->td_priority, pri, rqh);
+
+  for (i = 0; i < RQ_NQS; i++) {
+    rqh = &rq->rq_queues[i];
+    printf("runq_%d: ", i + 1);
+    TAILQ_FOREACH(td_tmp, rqh, td_runq) {
+      printf("%d ", td_tmp->td_priority);
+    }
+    printf("\n");
+  }
+
+  printf("-----------------------------------------------\n");
+}
+
+int is_user_thread(int class);
 int is_user_thread(int class) {
   int is_realtime = class >= 48 && class <= 79;
   int is_timeshare = class >= 120 && class <= 223;
@@ -421,6 +453,11 @@ runq_add(struct runq *rq, struct thread *td, int flags)
     // Line 400 divides default priority by RQ_PPQ, meaning that each
     // run queue contains threads with 4 varying priorities.
   }
+  
+  int sched_save_env_conf = get_sched_save_env_conf();
+
+  if (sched_save_env_conf == 1)
+    sched_save_to_file(rq, td, pri, rqh);
   // NEW CODE
 }
 
