@@ -425,7 +425,7 @@ runq_add(struct runq *rq, struct thread *td, int flags)
 
   if (sched_env_conf >= 3) {
     // TODO: implement some splatter scheduling func
-    pri = splatter_sched( ... );
+    pri = splatter_sched(td->td_priority);
   } else {
     pri = td->td_priority / RQ_PPQ;
   }
@@ -459,6 +459,22 @@ runq_add(struct runq *rq, struct thread *td, int flags)
   if (sched_save_env_conf == 1)
     sched_save_to_file(rq, td, pri, rqh);
   // NEW CODE
+}
+
+int
+splatter_sched(int pri) {
+  int new = 0;
+
+  int is_realtime = pri >= 48 && pri <= 79;
+  int is_timeshare = pri >= 120 && pri <= 223;
+  int is_idle = pri >= 224 && pri <= 255;
+
+  if (is_realtime) {new = (rand() % (79 – 48 + 1)) + 48;}
+  else if (is_timeshare) {new = (rand() % (223 – 120 + 1)) + 120;}
+  else if (is_idle) {new = (rand() % (255 – 224 + 1)) + 224;}
+
+  new=new/4;
+  return new;
 }
 
 void
@@ -586,6 +602,7 @@ runq_choose_from(struct runq *rq, u_char idx)
 
 	return (NULL);
 }
+
 /*
  * Remove the thread from the queue specified by its priority, and clear the
  * corresponding status bit if the queue becomes empty.
