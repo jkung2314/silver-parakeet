@@ -463,7 +463,6 @@ runq_add(struct runq *rq, struct thread *td, int flags)
     // Line 400 divides default priority by RQ_PPQ, meaning that each
     // run queue contains threads with 4 varying priorities.
   }
-  
   int sched_save_env_conf = get_sched_save_env_conf();
 
   if (sched_save_env_conf == 1)
