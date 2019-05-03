@@ -445,6 +445,13 @@ runq_add(struct runq *rq, struct thread *td, int flags)
       TAILQ_INSERT_TAIL(rqh, td, td_runq);
     }
   } else {
+	  struct thread *td_tmp;
+	  TAILQ_FOREACH(td_tmp, rqh, td_runq) {
+		  if (td->td_priority >= td_tmp->td_priority) {
+			  TAILQ_INSERT_BEFORE(td, td_tmp, td_runq);
+			  return (0);
+		  }
+	  }
     // Steven:
     // I was thinking that we need to implement priority queue here
     // since priority queue by definition inserts at O(log N) and
