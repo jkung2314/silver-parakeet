@@ -1,8 +1,9 @@
 cc -o test_runq test_runq.c -Wall
-kenv CMPS_111_SCHED=$CASE
 
 for CASE in `seq 1 4`;
 do
+  kenv CMPS_111_SCHED=$CASE
+
   time for temp in `seq 1 1`;
   do
     for i in `seq 1 10`;
@@ -13,9 +14,9 @@ do
         ./test_runq 1000000000 &
       fi
     done
-
-    dmesg -ac > out-$CASE
   done
+
+  dmesg -ac > out-$CASE
 done
 
 kenv CMPS_111_SCHED=0
