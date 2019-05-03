@@ -62,6 +62,7 @@ __FBSDID("$FreeBSD: releng/12.0/sys/kern/kern_switch.c 335879 2018-07-03 01:55:0
 #endif
 
 int splatter_sched(int pri);
+void runq_insert_priq(struct rqhead *rqh, struct thread *td);
 
 CTASSERT((RQB_BPW * RQB_LEN) == RQ_NQS);
 
@@ -502,7 +503,6 @@ runq_add_pri(struct runq *rq, struct thread *td, u_char pri, int flags)
   }
 }
 
-void runq_insert_priq(struct rqhead *rqh, struct thread *td);
 void runq_insert_priq(struct rqhead *rqh, struct thread *td) {
   struct thread *td_tmp;
 
