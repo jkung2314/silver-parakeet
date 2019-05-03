@@ -450,13 +450,13 @@ runq_add(struct runq *rq, struct thread *td, int flags)
       TAILQ_INSERT_TAIL(rqh, td, td_runq);
     }
   } else {
-	  struct thread *td_tmp;
-	  TAILQ_FOREACH(td_tmp, rqh, td_runq) {
-      if (td->td_priority < td_tmp->td_priority) {
-			  TAILQ_INSERT_BEFORE(td_tmp, td, td_runq);
+    struct thread *td_tmp;
+    TAILQ_FOREACH(td_tmp, rqh, td_runq) {
+      if (td->td_priority >= td_tmp->td_priority) {
+        TAILQ_INSERT_BEFORE(td, td_tmp, td_runq);
         return;
-		  }
-	  }
+      }
+    }
     TAILQ_INSERT_HEAD(rqh, td, td_runq);
   }
   // NEW CODE
@@ -481,7 +481,7 @@ splatter_sched(int pri) {
 void
 runq_add_pri(struct runq *rq, struct thread *td, u_char pri, int flags)
 {
-	struct rqhead *rqh;
+    struct rqhead *rqh;
 
   int sched_env_conf = get_sched_env_conf();
 
@@ -510,8 +510,8 @@ runq_add_pri(struct runq *rq, struct thread *td, u_char pri, int flags)
   } else {
     struct thread *td_tmp;
     TAILQ_FOREACH(td_tmp, rqh, td_runq) {
-      if (td->td-priority < td_tmp->td_priority) {
-        TAILQ_INSERT_BEFORE(td_tmp, td, td_runq);
+      if (td->td_priority >= td_tmp->td_priority) {
+        TAILQ_INSERT_BEFORE(td, td_tmp, td_runq);
         return;
       }
     }
