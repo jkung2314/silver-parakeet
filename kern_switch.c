@@ -453,7 +453,7 @@ runq_add(struct runq *rq, struct thread *td, int flags)
     struct thread *td_tmp;
     TAILQ_FOREACH(td_tmp, rqh, td_runq) {
       if (td->td_priority >= td_tmp->td_priority) {
-        TAILQ_INSERT_BEFORE(td, td_tmp, td_runq);
+        TAILQ_INSERT_BEFORE(td_tmp, td, td_runq);
         return;
       }
     }
@@ -511,7 +511,7 @@ runq_add_pri(struct runq *rq, struct thread *td, u_char pri, int flags)
     struct thread *td_tmp;
     TAILQ_FOREACH(td_tmp, rqh, td_runq) {
       if (td->td_priority >= td_tmp->td_priority) {
-        TAILQ_INSERT_BEFORE(td, td_tmp, td_runq);
+        TAILQ_INSERT_BEFORE(td_tmp, td, td_runq);
         return;
       }
     }
