@@ -438,6 +438,11 @@ runq_add(struct runq *rq, struct thread *td, int flags)
 	CTR4(KTR_RUNQ, "runq_add: td=%p pri=%d %d rqh=%p",
 	    td, td->td_priority, pri, rqh);
 
+  int sched_save_env_conf = get_sched_save_env_conf();
+
+  if (sched_save_env_conf == 1)
+    sched_save_to_file(rq, td, rqh);
+
   if (sched_env_conf == 1 || sched_env_conf == 3) {
     if (flags & SRQ_PREEMPTED) {
       TAILQ_INSERT_HEAD(rqh, td, td_runq);
@@ -446,27 +451,14 @@ runq_add(struct runq *rq, struct thread *td, int flags)
     }
   } else {
 	  struct thread *td_tmp;
-	  TAILQ_FOREACH(td_tmp, &rq->rq_queues[pri], td_runq) {
-		  if (td->td_priority >= td_tmp->td_priority) {
-			  TAILQ_INSERT_BEFORE(td, td_tmp, td_runq);
-			  break;
+	  TAILQ_FOREACH(td_tmp, rqh, td_runq) {
+      if (td->td_priority < td_tmp->td_priority) {
+			  TAILQ_INSERT_BEFORE(td_tmp, td, td_runq);
+        return;
 		  }
 	  }
-    // Steven:
-    // I was thinking that we need to implement priority queue here
-    // since priority queue by definition inserts at O(log N) and
-    // removes at O(1). 
-    //
-    // RQ_NQS = 64      Number of run queues
-    // RQ_PPQ = 4       Priorities per queue
-    // 
-    // Line 400 divides default priority by RQ_PPQ, meaning that each
-    // run queue contains threads with 4 varying priorities.
+    TAILQ_INSERT_HEAD(rqh, td, td_runq);
   }
-  int sched_save_env_conf = get_sched_save_env_conf();
-
-  if (sched_save_env_conf == 1)
-    sched_save_to_file(rq, td, rqh);
   // NEW CODE
 }
 
