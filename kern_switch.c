@@ -389,7 +389,7 @@ void sched_save_to_file(struct runq *rq, struct thread *td, struct rqhead *rqh) 
   int i, pri;
   struct thread *td_tmp;
 
-  pri = td->priority / RQ_PPQ;
+  pri = td->td_priority / RQ_PPQ;
   printf("current: td=%p pri%d normalized_pri=%d rqh=%p\n", td, td->td_priority, pri, rqh);
 
   for (i = 0; i < RQ_NQS; i++) {
@@ -424,7 +424,7 @@ runq_add(struct runq *rq, struct thread *td, int flags)
 	int pri;
 
   int sched_env_conf = get_sched_env_conf();
-  int is_user = is_user_thread(td->td_pri_class);
+  //int is_user = is_user_thread(td->td_pri_class);
 
   if (sched_env_conf >= 3) {
     // TODO: implement some splatter scheduling func
@@ -449,7 +449,6 @@ runq_add(struct runq *rq, struct thread *td, int flags)
 	  TAILQ_FOREACH(td_tmp, rqh, td_runq) {
 		  if (td->td_priority >= td_tmp->td_priority) {
 			  TAILQ_INSERT_BEFORE(td, td_tmp, td_runq);
-			  return (0);
 		  }
 	  }
     // Steven:
@@ -466,7 +465,7 @@ runq_add(struct runq *rq, struct thread *td, int flags)
   int sched_save_env_conf = get_sched_save_env_conf();
 
   if (sched_save_env_conf == 1)
-    sched_save_to_file(rq, td, pri, rqh);
+    sched_save_to_file(rq, td, rqh);
   // NEW CODE
 }
 
