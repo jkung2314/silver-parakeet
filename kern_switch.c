@@ -47,6 +47,7 @@ __FBSDID("$FreeBSD: releng/12.0/sys/kern/kern_switch.c 335879 2018-07-03 01:55:0
 
 #include <machine/cpu.h>
 
+
 /* Uncomment this to enable logging of critical_enter/exit. */
 #if 0
 #define	KTR_CRITICAL	KTR_SCHED
@@ -59,6 +60,8 @@ __FBSDID("$FreeBSD: releng/12.0/sys/kern/kern_switch.c 335879 2018-07-03 01:55:0
 #error "The FULL_PREEMPTION option requires the PREEMPTION option"
 #endif
 #endif
+
+int splatter_sched(int pri);
 
 CTASSERT((RQB_BPW * RQB_LEN) == RQ_NQS);
 
@@ -469,9 +472,9 @@ splatter_sched(int pri) {
   int is_timeshare = pri >= 120 && pri <= 223;
   int is_idle = pri >= 224 && pri <= 255;
 
-  if (is_realtime) {new = (rand() % (79 – 48 + 1)) + 48;}
-  else if (is_timeshare) {new = (rand() % (223 – 120 + 1)) + 120;}
-  else if (is_idle) {new = (rand() % (255 – 224 + 1)) + 224;}
+  if (is_realtime) {new = ((int)random() % (79 - 48 + 1)) + 48;}
+  else if (is_timeshare) {new = ((int)random() % (223 - 120 + 1)) + 120;}
+  else if (is_idle) {new = ((int)random() % (255 - 224 + 1)) + 224;}
 
   new=new/4;
   return new;
