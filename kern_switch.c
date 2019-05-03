@@ -446,9 +446,10 @@ runq_add(struct runq *rq, struct thread *td, int flags)
     }
   } else {
 	  struct thread *td_tmp;
-	  TAILQ_FOREACH(td_tmp, rqh, td_runq) {
+	  TAILQ_FOREACH(td_tmp, &rq->rq_queues[pri], td_runq) {
 		  if (td->td_priority >= td_tmp->td_priority) {
 			  TAILQ_INSERT_BEFORE(td, td_tmp, td_runq);
+			  break;
 		  }
 	  }
     // Steven:
