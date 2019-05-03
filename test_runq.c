@@ -1,13 +1,14 @@
-#include <kenv.h>
-#include <string.h>
-#include <unistd.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[]) {
-  int length = argv[1][0] - '0';
+  int j;
+  int i = 0;
+  int length = atoi(argv[1]);
 
-  kenv(KENV_SET, "CMPS_111_SCHED_SAVE", "1", strlen("1") + 1);
-  sleep(length);
-  kenv(KENV_SET, "CMPS_111_SCHED_SAVE", "0", strlen("0") + 1);
+  while (i < length) {
+    j = i * 1;
+    i++;
+  }
 
   return 0;
 }
