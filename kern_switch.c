@@ -385,8 +385,8 @@ int get_sched_save_env_conf(void) {
   return config_env[0] - '0';
 }
 
-int reset_sched_save_env_conf(void);
-int reset_sched_save_env_conf(void) {
+void reset_sched_save_env_conf(void);
+void reset_sched_save_env_conf(void) {
   kern_setenv("CMPS_111_SCHED_SAVE", "0");
 }
 
@@ -459,7 +459,7 @@ runq_add(struct runq *rq, struct thread *td, int flags)
 
   int sched_save_env_conf = get_sched_save_env_conf();
   if (sched_save_env_conf == 1) {
-    sched_save_to_file(rq, td, rqh, pri);
+    sched_save_to_file(rq, rqh, pri);
     reset_sched_save_env_conf();
   }
 }
@@ -510,7 +510,7 @@ runq_add_pri(struct runq *rq, struct thread *td, u_char pri, int flags)
 
   int sched_save_env_conf = get_sched_save_env_conf();
   if (sched_save_env_conf == 1) {
-    sched_save_to_file(rq, td, rqh, pri);
+    sched_save_to_file(rq, rqh, pri);
     reset_sched_save_env_conf();
   }
 }
