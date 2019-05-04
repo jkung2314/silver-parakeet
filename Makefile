@@ -1,6 +1,7 @@
 test: test_runq
+	@dmesg -ac
 	for i in 1 2 3 4; do \
-		./test_runq $i; \
+		time ./test.sh $$i; \
 	done ; \
 	make clean_test
 

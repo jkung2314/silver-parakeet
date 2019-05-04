@@ -390,9 +390,9 @@ void reset_sched_save_env_conf(void) {
   kern_setenv("CMPS_111_SCHED_SAVE", "0");
 }
 
-void sched_save_to_file(struct runq *rq, struct rqhead *rqh, int index);
-void sched_save_to_file(struct runq *rq, struct rqhead *rqh, int index) {
-  int i, len;
+void sched_save_to_file(struct runq *rq, struct rqhead *rqh);
+void sched_save_to_file(struct runq *rq, struct rqhead *rqh) {
+  int i;
   struct thread *td_tmp;
 
   for (i = 0; i < RQ_NQS; i++) {
@@ -405,13 +405,6 @@ void sched_save_to_file(struct runq *rq, struct rqhead *rqh, int index) {
   }
 
   printf("-----------------------------------------------\n");
-
-  len = 0;
-  rqh = &rq->rq_queues[index];
-  TAILQ_FOREACH(td_tmp, rqh, td_runq) {
-    len++;
-  }
-  printf("current queue_%d length: %d\n", index, len);
 }
 
 int is_user_thread(int pri);
@@ -459,7 +452,7 @@ runq_add(struct runq *rq, struct thread *td, int flags)
 
   int sched_save_env_conf = get_sched_save_env_conf();
   if (sched_save_env_conf == 1) {
-    sched_save_to_file(rq, rqh, pri);
+    sched_save_to_file(rq, rqh);
     reset_sched_save_env_conf();
   }
 }
@@ -510,7 +503,7 @@ runq_add_pri(struct runq *rq, struct thread *td, u_char pri, int flags)
 
   int sched_save_env_conf = get_sched_save_env_conf();
   if (sched_save_env_conf == 1) {
-    sched_save_to_file(rq, rqh, pri);
+    sched_save_to_file(rq, rqh);
     reset_sched_save_env_conf();
   }
 }
