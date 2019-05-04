@@ -385,13 +385,15 @@ int get_sched_save_env_conf(void) {
   return config_env[0] - '0';
 }
 
-void sched_save_to_file(struct runq *rq, struct thread *td, struct rqhead *rqh);
-void sched_save_to_file(struct runq *rq, struct thread *td, struct rqhead *rqh) {
-  int i, pri;
-  struct thread *td_tmp;
+void reset_sched_save_env_conf(void);
+void reset_sched_save_env_conf(void) {
+  kern_setenv("CMPS_111_SCHED_SAVE", "0");
+}
 
-  pri = td->td_priority / RQ_PPQ;
-  printf("current: td=%p pri%d normalized_pri=%d rqh=%p\n", td, td->td_priority, pri, rqh);
+void sched_save_to_file(struct runq *rq, struct rqhead *rqh);
+void sched_save_to_file(struct runq *rq, struct rqhead *rqh) {
+  int i;
+  struct thread *td_tmp;
 
   for (i = 0; i < RQ_NQS; i++) {
     rqh = &rq->rq_queues[i];
@@ -405,11 +407,11 @@ void sched_save_to_file(struct runq *rq, struct thread *td, struct rqhead *rqh) 
   printf("-----------------------------------------------\n");
 }
 
-int is_user_thread(int class);
-int is_user_thread(int class) {
-  int is_realtime = class >= 48 && class <= 79;
-  int is_timeshare = class >= 120 && class <= 223;
-  int is_idle = class >= 224 && class <= 255;
+int is_user_thread(int pri);
+int is_user_thread(int pri) {
+  int is_realtime = pri >= 48 && pri <= 79;
+  int is_timeshare = pri >= 120 && pri <= 223;
+  int is_idle = pri >= 224 && pri <= 255;
 
   return is_realtime || is_timeshare || is_idle;
 }
@@ -425,9 +427,9 @@ runq_add(struct runq *rq, struct thread *td, int flags)
 	int pri;
 
   int sched_env_conf = get_sched_env_conf();
-  //int is_user = is_user_thread(td->td_pri_class);
+  int is_user = is_user_thread(td->td_priority);
 
-  if (sched_env_conf >= 3) {
+  if (is_user && sched_env_conf >= 3) {
     pri = splatter_sched(td->td_priority);
   } else {
     pri = td->td_priority / RQ_PPQ;
@@ -438,11 +440,7 @@ runq_add(struct runq *rq, struct thread *td, int flags)
 	CTR4(KTR_RUNQ, "runq_add: td=%p pri=%d %d rqh=%p",
 	    td, td->td_priority, pri, rqh);
 
-  int sched_save_env_conf = get_sched_save_env_conf();
-  if (sched_save_env_conf == 1)
-    sched_save_to_file(rq, td, rqh);
-
-  if (sched_env_conf == 2 || sched_env_conf == 4) {
+  if (is_user && (sched_env_conf == 2 || sched_env_conf == 4)) {
     runq_insert_priq(rqh, td);
   } else {
     if (flags & SRQ_PREEMPTED) {
@@ -451,7 +449,12 @@ runq_add(struct runq *rq, struct thread *td, int flags)
       TAILQ_INSERT_TAIL(rqh, td, td_runq);
     }
   }
-  // NEW CODE
+
+  int sched_save_env_conf = get_sched_save_env_conf();
+  if (sched_save_env_conf == 1) {
+    sched_save_to_file(rq, rqh);
+    reset_sched_save_env_conf();
+  }
 }
 
 int
@@ -476,9 +479,9 @@ runq_add_pri(struct runq *rq, struct thread *td, u_char pri, int flags)
     struct rqhead *rqh;
 
   int sched_env_conf = get_sched_env_conf();
-  //int is_user = is_user_thread(td->td_pri_class);
+  int is_user = is_user_thread(td->td_priority);
 
-  if (sched_env_conf >= 3)
+  if (is_user && sched_env_conf >= 3)
     pri = splatter_sched(td->td_priority);
 
 	KASSERT(pri < RQ_NQS, ("runq_add_pri: %d out of range", pri));
@@ -488,11 +491,7 @@ runq_add_pri(struct runq *rq, struct thread *td, u_char pri, int flags)
 	CTR4(KTR_RUNQ, "runq_add_pri: td=%p pri=%d idx=%d rqh=%p",
 	    td, td->td_priority, pri, rqh);
 
-  int sched_save_env_conf = get_sched_save_env_conf();
-  if (sched_save_env_conf == 1)
-    sched_save_to_file(rq, td, rqh);
-
-  if (sched_env_conf == 2 || sched_env_conf == 4) {
+  if (is_user && (sched_env_conf == 2 || sched_env_conf == 4)) {
     runq_insert_priq(rqh, td);
   } else {
     if (flags & SRQ_PREEMPTED) {
@@ -500,6 +499,12 @@ runq_add_pri(struct runq *rq, struct thread *td, u_char pri, int flags)
     } else {
       TAILQ_INSERT_TAIL(rqh, td, td_runq);
     }
+  }
+
+  int sched_save_env_conf = get_sched_save_env_conf();
+  if (sched_save_env_conf == 1) {
+    sched_save_to_file(rq, rqh);
+    reset_sched_save_env_conf();
   }
 }
 

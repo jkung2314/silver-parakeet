@@ -1,24 +1,21 @@
-cc -o test_runq test_runq.c -Wall
+CASE=$1
+START=$(date +%s)
 
-for CASE in `seq 1 4`;
+echo testing case $CASE...
+
+kenv CMPS_111_SCHED=$CASE
+
+for i in `seq 1 10`;
 do
-  kenv CMPS_111_SCHED=$CASE
-
-  time for temp in `seq 1 1`;
-  do
-    for i in `seq 1 10`;
-    do
-      if [[ $i -eq 10 ]]; then
-        ./test_runq 1000000000 ;
-      else
-        ./test_runq 1000000000 &
-      fi
-    done
-  done
-
-  dmesg -ac > out-$CASE
+  ./test_runq 1000000000 $i in-$CASE &
 done
 
-kenv CMPS_111_SCHED=0
-rm test_runq
-echo "test done"
+kenv CMPS_111_SCHED_SAVE=1
+wait
+dmesg -c > out-$CASE
+
+END=$(date +%s)
+echo "case $CASE took $((END - START)) seconds" >> out-$CASE
+
+cat in-$CASE >> out-$CASE
+rm -f in-$CASE
