@@ -385,13 +385,15 @@ int get_sched_save_env_conf(void) {
   return config_env[0] - '0';
 }
 
-void sched_save_to_file(struct runq *rq, struct thread *td, struct rqhead *rqh);
-void sched_save_to_file(struct runq *rq, struct thread *td, struct rqhead *rqh) {
-  int i, pri;
-  struct thread *td_tmp;
+int reset_sched_save_env_conf(void);
+int reset_sched_save_env_conf(void) {
+  kern_setenv("CMPS_111_SCHED_SAVE", "0");
+}
 
-  pri = td->td_priority / RQ_PPQ;
-  printf("current: td=%p pri%d normalized_pri=%d rqh=%p\n", td, td->td_priority, pri, rqh);
+void sched_save_to_file(struct runq *rq, struct rqhead *rqh, int index);
+void sched_save_to_file(struct runq *rq, struct rqhead *rqh, int index) {
+  int i, len;
+  struct thread *td_tmp;
 
   for (i = 0; i < RQ_NQS; i++) {
     rqh = &rq->rq_queues[i];
@@ -403,6 +405,13 @@ void sched_save_to_file(struct runq *rq, struct thread *td, struct rqhead *rqh) 
   }
 
   printf("-----------------------------------------------\n");
+
+  len = 0;
+  rqh = &rq->rq_queues[index];
+  TAILQ_FOREACH(td_tmp, rqh, td_runq) {
+    len++;
+  }
+  printf("current queue_%d length: %d\n", index, len);
 }
 
 int is_user_thread(int class);
@@ -438,10 +447,6 @@ runq_add(struct runq *rq, struct thread *td, int flags)
 	CTR4(KTR_RUNQ, "runq_add: td=%p pri=%d %d rqh=%p",
 	    td, td->td_priority, pri, rqh);
 
-  int sched_save_env_conf = get_sched_save_env_conf();
-  if (sched_save_env_conf == 1)
-    sched_save_to_file(rq, td, rqh);
-
   if (sched_env_conf == 2 || sched_env_conf == 4) {
     runq_insert_priq(rqh, td);
   } else {
@@ -451,7 +456,12 @@ runq_add(struct runq *rq, struct thread *td, int flags)
       TAILQ_INSERT_TAIL(rqh, td, td_runq);
     }
   }
-  // NEW CODE
+
+  int sched_save_env_conf = get_sched_save_env_conf();
+  if (sched_save_env_conf == 1) {
+    sched_save_to_file(rq, td, rqh, pri);
+    reset_sched_save_env_conf();
+  }
 }
 
 int
@@ -488,10 +498,6 @@ runq_add_pri(struct runq *rq, struct thread *td, u_char pri, int flags)
 	CTR4(KTR_RUNQ, "runq_add_pri: td=%p pri=%d idx=%d rqh=%p",
 	    td, td->td_priority, pri, rqh);
 
-  int sched_save_env_conf = get_sched_save_env_conf();
-  if (sched_save_env_conf == 1)
-    sched_save_to_file(rq, td, rqh);
-
   if (sched_env_conf == 2 || sched_env_conf == 4) {
     runq_insert_priq(rqh, td);
   } else {
@@ -500,6 +506,12 @@ runq_add_pri(struct runq *rq, struct thread *td, u_char pri, int flags)
     } else {
       TAILQ_INSERT_TAIL(rqh, td, td_runq);
     }
+  }
+
+  int sched_save_env_conf = get_sched_save_env_conf();
+  if (sched_save_env_conf == 1) {
+    sched_save_to_file(rq, td, rqh, pri);
+    reset_sched_save_env_conf();
   }
 }
 
