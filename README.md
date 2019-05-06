@@ -12,7 +12,8 @@ to the post can be found here: https://piazza.com/class/jtt1omu5bb2sd?cid=347
 
 ## Instructions to Run Code
 Run `kenv CMPS_111_SCHED=1` to create/modify kernel variable, where 1 represents case 1,  
-and 2 represents case 2, etc.
+and 2 represents case 2, etc. Note that after building and installing the kernel once,  
+changing the kernel variable will not require another build/install.
 
 Run `make all`, which moves the required the kernel file(s) /usr/src/sys/kern,  
 then proceeds to build and install kernel.
